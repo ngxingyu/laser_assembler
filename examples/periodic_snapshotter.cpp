@@ -58,8 +58,8 @@ public:
       };
 
     // Create a publisher with a custom Quality of Service profile.
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
-    custom_qos_profile.depth = 7;
+    rclcpp::QoS custom_qos_profile = rclcpp::QoS(7);
+    
     pub_ = this->create_publisher<sensor_msgs::msg::PointCloud>(
       "/assembled_cloud", custom_qos_profile);
 

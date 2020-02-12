@@ -59,7 +59,9 @@ public:
         this->ScanCallback(msg);
       };
     scan_sub_ = node_->create_subscription<sensor_msgs::msg::LaserScan>(
-      "dummy_scan", scan_callback);
+      "dummy_scan",
+      rclcpp::QoS(1),
+      scan_callback);
   }
 
   void ScanCallback(sensor_msgs::msg::LaserScan::ConstSharedPtr scan_msg)

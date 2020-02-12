@@ -54,8 +54,10 @@ public:
     } else {
       start();
       skew_scan_sub_ = n_->create_subscription<sensor_msgs::msg::LaserScan>(
-        "scan", std::bind(&LaserScanAssembler::scanCallback, this,
-        std::placeholders::_1));
+        "scan",
+        rclcpp::QoS(1),
+        std::bind(&LaserScanAssembler::scanCallback, this, std::placeholders::_1)
+      );
     }
   }
 
