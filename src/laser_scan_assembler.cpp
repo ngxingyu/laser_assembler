@@ -23,6 +23,7 @@
 #include "rclcpp/time.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
+#include "laser_assembler/point_cloud_conversion.hpp"
 
 #define TIME rclcpp::Time
 
@@ -86,7 +87,9 @@ public:
     // TODO(vandana) ignore_laser_skew_ this case is not handled right now, as there is
     // no transformPointCloud support for PointCloud in bouncy.
     if (ignore_laser_skew_) {  // Do it the fast (approximate) way
-      projector_.projectLaser(scan_filtered_, cloud_out);
+      sensor_msgs::msg::PointCloud2 cloud2_out;
+      projector_.projectLaser(scan_filtered_, cloud2_out);
+      sensor_msgs::convertPointCloud2ToPointCloud(cloud2_out, cloud_out);
       if (cloud_out.header.frame_id != fixed_frame_id) {
         // TODO(vandana) transform PointCloud
         // tf_->transformPointCloud(fixed_frame_id, cloud_out, cloud_out);
@@ -96,8 +99,10 @@ public:
         laser_geometry::channel_option::Distance +
         laser_geometry::channel_option::Index +
         laser_geometry::channel_option::Timestamp;
+      sensor_msgs::msg::PointCloud2 cloud2_out;
       projector_.transformLaserScanToPointCloud(fixed_frame_id, scan_filtered_,
-        cloud_out, tfBuffer, mask);
+        cloud2_out, tfBuffer, mask);
+      sensor_msgs::convertPointCloud2ToPointCloud(cloud2_out, cloud_out);
     }
   }
 

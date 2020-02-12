@@ -377,11 +377,10 @@ public:
     std::shared_ptr<std::map<std::string, std::string>> header(new std::map<std::string,
       std::string>);
 
-    (*header)["callerid"] = "unknown";
     // Time t = rclcpp::Clock::now();
     rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
     rclcpp::Time t = system_clock.now();
-    add(MEvent(message, header, t));
+    add(MEvent(message, t));
   }
 
   /**
