@@ -44,6 +44,9 @@
   <test_depend>ament_lint_common</test_depend>
   <test_depend>builtin_interfaces</test_depend>
 
+  <depend>pluginlib</depend>
+  <depend>tinyxml2</depend>
+
   <member_of_group>rosidl_interface_packages</member_of_group>
 
   <export>

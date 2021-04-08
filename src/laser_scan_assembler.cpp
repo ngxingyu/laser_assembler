@@ -46,7 +46,7 @@ public:
       true);
 
     // configure the filter chain from the parameter server
-    filter_chain_.configure("filters", node_);
+    filter_chain_.configure("filters", node_->get_node_logging_interface(), node_->get_node_parameters_interface());
 
     // Have different callbacks, depending on whether or not we want to ignore
     // laser skews.

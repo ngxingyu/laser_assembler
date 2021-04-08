@@ -18,6 +18,8 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(filters REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(TinyXML2 REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME} "srv/AssembleScans.srv"
     "srv/AssembleScans2.srv"
@@ -32,7 +34,9 @@ set(INCLUDE_DIRS include ${ament_cmake_INCLUDE_DIRS}
     ${message_filters_INCLUDE_DIRS}
     ${rostest_INCLUDE_DIRS} ${system_INCLUDE_DIRS}
     ${geometry_msgs_INCLUDE_DIRS}
-    ${filters_INCLUDE_DIRS})
+    ${filters_INCLUDE_DIRS}
+    ${pluginlib_INCLUDE_DIRS}
+    ${TinyXML2_INCLUDE_DIRS})
 
 include_directories(${INCLUDE_DIRS})
 
@@ -43,7 +47,9 @@ set(LIBS ${rclcpp_LIBRARIES} ${ament_cmake_LIBRARIES}
     ${laser_geometry_LIBRARIES}
     ${geometry_msgs_LIBRARIES}
     ${message_filters_LIBRARIES} ${sensor_msgs_LIBRARIES}
-    ${filters_LIBRARIES})
+    ${filters_LIBRARIES}
+    ${pluginlib_LIBRARIES}
+    ${TinyXML2_LIBRARIES})
 
 add_executable(laser_scan_assembler src/laser_scan_assembler.cpp)
 target_link_libraries(laser_scan_assembler ${LIBS})
