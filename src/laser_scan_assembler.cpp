@@ -141,7 +141,10 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("laser_scan_assembler");
+  rclcpp::NodeOptions node_options;
+
+  node_options.automatically_declare_parameters_from_overrides(true);
+  rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("laser_scan_assembler", node_options);
   g_logger = node->get_logger();
   laser_assembler::LaserScanAssembler pc_assembler(node);
   rclcpp::spin(node);
