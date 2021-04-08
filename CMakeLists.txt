@@ -26,7 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME} "srv/AssembleScans.srv"
     DEPENDENCIES builtin_interfaces sensor_msgs)
 
 set(INCLUDE_DIRS include ${ament_cmake_INCLUDE_DIRS}
-    ${rosidl_default_generators_INCLUDE_DIRS} ${signals_INCLUDE_DIRS}
+    ${rosidl_default_generators_INCLUDE_DIRS} 
     ${builtin_interfaces_INCLUDE_DIRS} ${rclcpp_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS}
     ${laser_geometry_INCLUDE_DIRS}
@@ -41,7 +41,7 @@ set(INCLUDE_DIRS include ${ament_cmake_INCLUDE_DIRS}
 include_directories(${INCLUDE_DIRS})
 
 set(LIBS ${rclcpp_LIBRARIES} ${ament_cmake_LIBRARIES}
-    ${rosidl_default_generators_LIBRARIES} ${signals_LIBRARIES}
+    ${rosidl_default_generators_LIBRARIES} 
     ${std_msgs_LIBRARIES}
     ${system_LIBRARIES} ${tf2_ros_LIBRARIES} ${tf2_LIBRARIES}
     ${laser_geometry_LIBRARIES}
@@ -73,7 +73,6 @@ install(TARGETS laser_scan_assembler
 
 ament_export_include_directories(include)
 ament_export_dependencies(rclcpp)
-ament_export_dependencies(signals)
 ament_export_dependencies(sensor_msgs)
 ament_export_dependencies(tf2_ros)
 ament_export_dependencies(tf2)
