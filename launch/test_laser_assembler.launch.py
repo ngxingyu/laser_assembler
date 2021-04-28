@@ -17,6 +17,7 @@
 import os
 import pathlib
 
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 import launch.actions
 from launch.substitutions import EnvironmentVariable
@@ -24,6 +25,11 @@ import launch_ros.actions
 
 
 def generate_launch_description():
+    laser_assembler_config = os.path.join(
+        get_package_share_directory('laser_assembler'),
+        'config',
+        'test_laser_assembler.yaml'
+    )
     parameters_file_dir = pathlib.Path(__file__).resolve().parent
     parameters_file_path = parameters_file_dir / 'test_laser_assembler.yaml'
     os.environ['FILE_PATH'] = str(parameters_file_dir)
@@ -41,11 +47,8 @@ def generate_launch_description():
             (EnvironmentVariable(name='TOPIC_NAME'), [
                 topic_prefix, EnvironmentVariable(name='TOPIC_NAME')])
         ],
-        parameters=[
-            parameters_file_path,
-            str(parameters_file_path),
-            [EnvironmentVariable(name='FILE_PATH'), os.sep, 'test_laser_assembler.yaml'],
-        ])
+        parameters=[laser_assembler_config]
+    )
 
     test_laser_assembler = launch_ros.actions.Node(
         package='laser_assembler', node_executable='test_assembler',

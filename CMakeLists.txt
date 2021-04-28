@@ -102,7 +102,7 @@ ament_export_dependencies(laser_geometry)
 ament_export_include_directories(${INCLUDE_DIRS})
 
 install(DIRECTORY
-  launch
+  launch config
   DESTINATION share/${PROJECT_NAME}
 )
 
