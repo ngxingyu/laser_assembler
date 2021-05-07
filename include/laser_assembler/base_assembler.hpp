@@ -38,6 +38,7 @@
 // errros.
 //#include "laser_assembler/message_filter.hpp"
 #include "sensor_msgs/msg/point_cloud.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
 // #include "sensor_msgs/point_cloud_conversion.h" // TODO This file was not
 // there in sensor_msgs package of ros2 so just copied it from ROS1 and ported to
 // ROS2 here.
@@ -111,6 +112,8 @@ private:
   double past_time = 0;
   rclcpp::Service<laser_assembler::srv::AssembleScans>::SharedPtr
     assemble_scans_server_;
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr  point_cloud_raw_pub_;
 
   message_filters::Subscriber<T> scan_sub_;
 
@@ -220,6 +223,8 @@ BaseAssembler<T>::BaseAssembler(
   assemble_scans_server_ =
     n_->create_service<laser_assembler::srv::AssembleScans>(
     "assemble_scans", assembleScansCallback);
+
+  point_cloud_raw_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/agvr/point_cloud_raw", 1);
 
   // ***** Start Listening to Data *****
   // (Well, don't start listening just yet. Keep this as null until we actually
@@ -421,6 +426,10 @@ bool BaseAssembler<T>::assembleScans(
     }
   }
   scan_hist_mutex_.unlock();
+
+  sensor_msgs::msg::PointCloud2 cloud2;
+  auto temp = sensor_msgs::convertPointCloudToPointCloud2(resp->cloud, cloud2);
+  point_cloud_raw_pub_->publish(cloud2);
 
   RCLCPP_DEBUG(g_logger, "\nPoint Cloud Results: Aggregated from index %u->%u. BufferSize: "
     "%lu. Points in cloud: %u",
