@@ -92,7 +92,7 @@ public:
       sensor_msgs::convertPointCloud2ToPointCloud(cloud2_out, cloud_out);
       if (cloud_out.header.frame_id != fixed_frame_id) {
         // TODO(vandana) transform PointCloud
-        // tf_->transformPointCloud(fixed_frame_id, cloud_out, cloud_out);
+        //tf_->transformPointCloud(fixed_frame_id, cloud_out, cloud_out);
       }
     } else {  // Do it the slower (more accurate) way
       int mask = laser_geometry::channel_option::Intensity +
@@ -101,7 +101,7 @@ public:
         laser_geometry::channel_option::Timestamp;
       sensor_msgs::msg::PointCloud2 cloud2_out;
       projector_.transformLaserScanToPointCloud(fixed_frame_id, scan_filtered_,
-        cloud2_out, tfBuffer, mask);
+        cloud2_out, buffer_, mask);
       sensor_msgs::convertPointCloud2ToPointCloud(cloud2_out, cloud_out);
     }
   }
@@ -109,6 +109,9 @@ public:
   void
   scanCallback(std::shared_ptr<sensor_msgs::msg::LaserScan const> laser_scan)
   {
+    double time = laser_scan->header.stamp.sec + laser_scan->header.stamp.nanosec * 1e-9;
+    //RCLCPP_INFO(g_logger, "     delta: %f", time - past_time);
+    past_time = time;
     if (!ignore_laser_skew_) {
       rclcpp::Duration cur_tolerance = rclcpp::Duration(
         laser_scan->time_increment * laser_scan->ranges.size());
@@ -125,6 +128,7 @@ public:
   }
 
 private:
+  double past_time = 0;
   bool ignore_laser_skew_;
   laser_geometry::LaserProjection projector_;
 

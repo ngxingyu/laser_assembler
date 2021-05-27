@@ -25,17 +25,20 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/utilities.hpp"
 #include "tf2/exceptions.h"
+#include "tf2_ros/buffer.h"
+#include <tf2_ros/create_timer_ros.h>
 #include "tf2_ros/transform_listener.h"
 #include "tf2/buffer_core.h"
 #include "tf2/time.h"
-// #include "tf2_ros/message_filter.h" // TODO message_filter.h file in bouncy's
+#include "tf2_ros/message_filter.h" // TODO message_filter.h file in bouncy's
 // tf2_ros package is not ported to ros2 yet. Found ported message_filter.h file
 // on link
 // https://github.com/ros2/geometry2/blob/ros2/tf2_ros/include/tf2_ros/message_filter.h
 // so copied that file to include directory of this package and fixed some
 // errros.
-#include "laser_assembler/message_filter.hpp"
+//#include "laser_assembler/message_filter.hpp"
 #include "sensor_msgs/msg/point_cloud.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
 // #include "sensor_msgs/point_cloud_conversion.h" // TODO This file was not
 // there in sensor_msgs package of ros2 so just copied it from ROS1 and ported to
 // ROS2 here.
@@ -45,6 +48,8 @@
 // Service
 #include "laser_assembler/srv/assemble_scans.hpp"
 #include "laser_assembler/srv/assemble_scans2.hpp"
+
+#include "rcutils/logging.h"
 
 rclcpp::Logger g_logger = rclcpp::get_logger("laser_scan_assembler");
 
@@ -98,13 +103,17 @@ protected:
   // message_filters's subscribe method requires raw node pointer.
   rclcpp::Node::SharedPtr n_;
   tf2::BufferCore tfBuffer;
+  tf2_ros::Buffer buffer_;
   tf2_ros::TransformListener * tf_;
   tf2_ros::MessageFilter<T> * tf_filter_;
 
 private:
   // ROS Input/Ouptut Handling
+  double past_time = 0;
   rclcpp::Service<laser_assembler::srv::AssembleScans>::SharedPtr
     assemble_scans_server_;
+
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr  point_cloud_raw_pub_;
 
   message_filters::Subscriber<T> scan_sub_;
 
@@ -139,8 +148,15 @@ private:
 template<class T>
 BaseAssembler<T>::BaseAssembler(
   const std::string & max_size_param_name,
-  const rclcpp::Node::SharedPtr & node_)
+  const rclcpp::Node::SharedPtr & node_) :
+  // tfBuffer(*node_->get_clock()),
+  buffer_(node_->get_clock())
 {
+  auto create_timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+    node_->get_node_base_interface(),
+    node_->get_node_timers_interface());
+
+  buffer_.setCreateTimerInterface(create_timer_interface);
   // **** Initialize TransformListener ****
   double tf_cache_time_secs;
   n_ = node_;
@@ -151,7 +167,7 @@ BaseAssembler<T>::BaseAssembler(
     RCLCPP_ERROR(g_logger, "Parameter tf_cache_time_secs<0 (%f)", tf_cache_time_secs);
   }
 
-  tf_ = new tf2_ros::TransformListener(tfBuffer);
+  tf_ = new tf2_ros::TransformListener(buffer_);
   RCLCPP_INFO(g_logger, "TF Cache Time: %f Seconds ", tf_cache_time_secs);
 
   // ***** Set max_scans *****
@@ -208,6 +224,8 @@ BaseAssembler<T>::BaseAssembler(
     n_->create_service<laser_assembler::srv::AssembleScans>(
     "assemble_scans", assembleScansCallback);
 
+  point_cloud_raw_pub_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>("/agvr/point_cloud_raw", 1);
+
   // ***** Start Listening to Data *****
   // (Well, don't start listening just yet. Keep this as null until we actually
   // start listening, when start() is called)
@@ -226,9 +244,18 @@ void BaseAssembler<T>::start(const std::string & in_topic_name)
     // subscribe method requires raw node pointer.
     scan_sub_.subscribe(n_.get(), in_topic_name);
     tf_filter_ =
-      new tf2_ros::MessageFilter<T>(scan_sub_, tfBuffer, fixed_frame_, 10, 0);
+      new tf2_ros::MessageFilter<T>(scan_sub_, buffer_, fixed_frame_, 10, 0);
     tf_filter_->registerCallback(
       std::bind(&BaseAssembler<T>::msgCallback, this, std::placeholders::_1));
+    // auto result = rcutils_logging_set_logger_level("tf2_ros_message_filter", RCUTILS_LOG_SEVERITY_INFO);
+    // RCLCPP_ERROR(g_logger, "Result from change log level: [%d]");
+    // if( result != RCUTILS_RET_OK)
+    // {
+    //   RCLCPP_ERROR(g_logger, "Errorr seting severit: %s", rcutils_get_error_string().str);
+    //   rcutils_reset_error();
+    // }
+    //auto temp = tf_filter_->dropped_message_count_;
+    //RCLCPP_ERROR(g_logger, "dropped: %ul", temp);
   }
 }
 
@@ -243,10 +270,17 @@ void BaseAssembler<T>::start()
   } else {
     scan_sub_.subscribe(n_.get(), "bogus");
     tf_filter_ =
-      new tf2_ros::MessageFilter<T>(scan_sub_, tfBuffer, fixed_frame_, 10, 0);
+      new tf2_ros::MessageFilter<T>(scan_sub_, buffer_, fixed_frame_, 500, n_);
     tf_filter_->registerCallback(
       std::bind(&BaseAssembler<T>::msgCallback, this, std::placeholders::_1));
   }
+    //   auto result = rcutils_logging_set_logger_level("tf2_ros_message_filter", 10);
+    // RCLCPP_ERROR(g_logger, "Result from change log level: [%d]");
+    // if( result != RCUTILS_RET_OK)
+    // {
+    //   RCLCPP_ERROR(g_logger, "Errorr seting severit: %s", rcutils_get_error_string().str);
+    //   rcutils_reset_error();
+    // }
 }
 
 template<class T>
@@ -262,6 +296,9 @@ BaseAssembler<T>::~BaseAssembler()
 template<class T>
 void BaseAssembler<T>::msgCallback(const std::shared_ptr<const T> & scan_ptr)
 {
+  double time = scan_ptr->header.stamp.sec + scan_ptr->header.stamp.nanosec * 1e-9;
+  //RCLCPP_INFO(g_logger, "     delta: %f", time - past_time);
+  past_time = time;
   RCLCPP_DEBUG(g_logger, "starting msgCallback");
   const T scan = *scan_ptr;
 
@@ -287,13 +324,12 @@ void BaseAssembler<T>::msgCallback(const std::shared_ptr<const T> & scan_ptr)
   }
   scan_hist_.push_back(
     cur_cloud);   // Add the newest scan to the back of the deque
-  total_pts_ += cur_cloud.points
-    .size();                 // Add the new scan to the running total of points
+  total_pts_ += cur_cloud.points.size();                 // Add the new scan to the running total of points
 
   // printf("Scans: %4lu  Points: %10u\n", scan_hist_.size(), total_pts_);
 
   scan_hist_mutex_.unlock();
-  RCLCPP_DEBUG(g_logger, "done with msgCallback");
+  RCLCPP_DEBUG(g_logger, "done with msgCallback - added %d pts", cur_cloud.points.size());
 }
 
 template<class T>
@@ -319,12 +355,18 @@ bool BaseAssembler<T>::assembleScans(
   }
   unsigned int start_index = i;
 
+  double past_time = scan_hist_[i].header.stamp.sec + scan_hist_[i].header.stamp.nanosec * 1e-9;
+
   unsigned int req_pts = 0;  // Keep a total of the points in the current request
   // Find the end of the request
   while (i < scan_hist_.size() &&  // Don't go past end of deque
     ((scan_hist_[i].header.stamp.sec) <
     req->end))       // Don't go past the end-time of the request
   {
+    //RCLCPP_INFO(g_logger, "timestamp: %i %i", scan_hist_[i].header.stamp.sec, scan_hist_[i].header.stamp.nanosec);
+    double time = scan_hist_[i].header.stamp.sec + scan_hist_[i].header.stamp.nanosec * 1e-9;
+    //RCLCPP_INFO(g_logger, "     delta: %f", time - past_time);
+    past_time = scan_hist_[i].header.stamp.sec + scan_hist_[i].header.stamp.nanosec * 1e-9;
     req_pts += (scan_hist_[i].points.size() + downsample_factor_ - 1) /
       downsample_factor_;
     i += downsample_factor_;
@@ -384,6 +426,10 @@ bool BaseAssembler<T>::assembleScans(
     }
   }
   scan_hist_mutex_.unlock();
+
+  sensor_msgs::msg::PointCloud2 cloud2;
+  auto temp = sensor_msgs::convertPointCloudToPointCloud2(resp->cloud, cloud2);
+  point_cloud_raw_pub_->publish(cloud2);
 
   RCLCPP_DEBUG(g_logger, "\nPoint Cloud Results: Aggregated from index %u->%u. BufferSize: "
     "%lu. Points in cloud: %u",
