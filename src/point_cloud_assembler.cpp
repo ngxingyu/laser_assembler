@@ -14,7 +14,7 @@
 
 #include <string>
 #include "laser_assembler/base_assembler.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "tf2_sensor_msgs/tf2_sensor_msgs.h"
 #include "tf2/convert.h"
 #include "tf2/transform_datatypes.h"

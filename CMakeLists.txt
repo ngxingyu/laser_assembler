@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(laser_assembler)
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -65,6 +65,8 @@ install(
   TARGETS laser_scan_assembler
   DESTINATION lib/${PROJECT_NAME})
 
+ament_target_dependencies(laser_scan_assembler pluginlib)
+
 add_executable(cloud_scan_assembler src/point_cloud_assembler.cpp)
   target_link_libraries(cloud_scan_assembler ${LIBS})
   rosidl_target_interfaces(cloud_scan_assembler
@@ -72,6 +74,8 @@ add_executable(cloud_scan_assembler src/point_cloud_assembler.cpp)
   install(
     TARGETS cloud_scan_assembler
     DESTINATION lib/${PROJECT_NAME})
+
+ament_target_dependencies(cloud_scan_assembler pluginlib tf2_geometry_msgs)
 
 include_directories(include)
 
@@ -85,12 +89,12 @@ install(TARGETS laser_scan_assembler
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include)
 
-  install(TARGETS cloud_scan_assembler
-  DESTINATION lib/${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include)
+  # install(TARGETS cloud_scan_assembler
+  # DESTINATION lib/${PROJECT_NAME}
+  # ARCHIVE DESTINATION lib
+  # LIBRARY DESTINATION lib
+  # RUNTIME DESTINATION bin
+  # INCLUDES DESTINATION include)
 
 ament_export_include_directories(include)
 ament_export_dependencies(rclcpp)

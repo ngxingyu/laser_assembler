@@ -113,7 +113,7 @@ public:
     //RCLCPP_INFO(g_logger, "     delta: %f", time - past_time);
     past_time = time;
     if (!ignore_laser_skew_) {
-      rclcpp::Duration cur_tolerance = rclcpp::Duration(
+      rclcpp::Duration cur_tolerance = rclcpp::Duration::from_seconds(
         laser_scan->time_increment * laser_scan->ranges.size());
       if (cur_tolerance > max_tolerance_) {
         RCLCPP_DEBUG(g_logger, "Upping tf tolerance from [%.4fs] to [%.4fs]",
