@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <string>
-#include "laser_assembler/base_assembler.hpp"
+#include "laser_assembler/base_assembler2.hpp"
 // #include <sensor_msgs/msg/point_cloud_conversion.h> // TODO
 #include "laser_assembler/point_cloud_conversion.hpp"
 
@@ -27,11 +27,11 @@ namespace laser_assembler
  *  * (Several params are inherited from BaseAssemblerSrv)
  */
 class PointCloud2Assembler
-  : public BaseAssembler<sensor_msgs::msg::PointCloud2>
+  : public BaseAssembler2<sensor_msgs::msg::PointCloud2>
 {
 public:
   explicit PointCloud2Assembler(rclcpp::Node::SharedPtr node)
-  : BaseAssembler<sensor_msgs::msg::PointCloud2>("max_clouds", node) {}
+  : BaseAssembler2<sensor_msgs::msg::PointCloud2>("max_clouds", node) {}
 
   ~PointCloud2Assembler() {}
 
@@ -41,13 +41,14 @@ public:
   }
 
   void ConvertToCloud(
-    const string & fixed_frame_id,
+    const std::string & fixed_frame_id,
     const sensor_msgs::msg::PointCloud2 & scan_in,
-    sensor_msgs::msg::PointCloud & cloud_out)
+    sensor_msgs::msg::PointCloud2 & cloud_out)
   {
-    sensor_msgs::msg::PointCloud cloud_in;
-    sensor_msgs::convertPointCloud2ToPointCloud(scan_in, cloud_in);
-    tf_->transformPointCloud(fixed_frame_id, cloud_in, cloud_out);
+    // sensor_msgs::msg::PointCloud2 cloud_in;
+    // sensor_msgs::convertPointCloud2ToPointCloud(scan_in, cloud_in);
+    // pcl_ros::transformPointCloud(fixed_frame_id, scan_in, cloud_out);
+    cloud_out = scan_in;
   }
 
 private:

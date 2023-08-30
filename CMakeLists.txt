@@ -14,6 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(laser_geometry REQUIRED)
+find_package(pcl_ros REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
@@ -33,6 +34,7 @@ set(INCLUDE_DIRS include ${ament_cmake_INCLUDE_DIRS}
     ${sensor_msgs_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS}
     ${laser_geometry_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS} ${tf2_INCLUDE_DIRS}
+    ${pcl_ros_INCLUDE_DIRS}
     ${tf2_geometry_msgs_INCLUDE_DIRS}
     ${tf2_sensor_msgs_INCLUDE_DIRS}
     ${message_filters_INCLUDE_DIRS}
@@ -48,6 +50,7 @@ set(LIBS ${rclcpp_LIBRARIES} ${ament_cmake_LIBRARIES}
     ${rosidl_default_generators_LIBRARIES} 
     ${std_msgs_LIBRARIES}
     ${system_LIBRARIES} ${tf2_ros_LIBRARIES} ${tf2_LIBRARIES}
+    ${pcl_ros_LIBRARIES}
     ${tf2_geometry_msgs_LIBRARIES}
     ${tf2_sensor_msgs_LIBRARIES}
     ${laser_geometry_LIBRARIES}
@@ -76,6 +79,17 @@ add_executable(cloud_scan_assembler src/point_cloud_assembler.cpp)
     DESTINATION lib/${PROJECT_NAME})
 
 ament_target_dependencies(cloud_scan_assembler pluginlib tf2_geometry_msgs)
+
+
+add_executable(cloud2_scan_assembler src/point_cloud2_assembler.cpp)
+  target_link_libraries(cloud2_scan_assembler ${LIBS})
+  rosidl_target_interfaces(cloud2_scan_assembler
+    ${PROJECT_NAME} "rosidl_typesupport_cpp")
+  install(
+    TARGETS cloud2_scan_assembler
+    DESTINATION lib/${PROJECT_NAME})
+
+ament_target_dependencies(cloud2_scan_assembler pluginlib tf2_geometry_msgs)
 
 include_directories(include)
 

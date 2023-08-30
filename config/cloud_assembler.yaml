@@ -5,3 +5,13 @@ cloud_scan_assembler:
         max_scans: 400
         ignore_laser_skew: false
         fixed_frame: base_link
+cloud2_scan_assembler:
+    ros__parameters:
+        tf_cache_time_secs: 10.0
+        max_scans: 400
+        ignore_laser_skew: false
+        fixed_frame: wamv/wamv/base_link
+        aggregation_time: 1
+        aggregation_topic: /wamv/merged_cloud_aggregated
+        use_sim_time: true
+

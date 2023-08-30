@@ -32,11 +32,16 @@ def generate_launch_description():
     print(config)
     laser_assembler = Node(
         package='laser_assembler',
-        executable='cloud_scan_assembler',
-        name='cloud_scan_assembler',
-        parameters=[config],
+        executable='cloud2_scan_assembler',
+        name='cloud2_scan_assembler',
+        # prefix='gdb -ex run --args',
+        parameters=[config,
+        #             {
+        #     "fixed_frame": "wamv/wamv/base_link",
+        # }
+        ],
         output='screen',
-        remappings=[('scan', 'scan')]
+        remappings=[('cloud', '/wamv/merged_cloud')]
     )
 
     return LaunchDescription([

@@ -21,6 +21,7 @@
   <build_depend>message_filters</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
+  <build_depend>pcl_ros</build_depend>
   <depend>tf2_geometry_msgs</depend>
   <build_depend>rclcpp</build_depend>
   <build_depend>filters</build_depend>
@@ -34,6 +35,7 @@
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>tf2</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>pcl_ros</exec_depend>
   <exec_depend>message_filters</exec_depend>
   <exec_depend>filters</exec_depend>
   <exec_depend>laser_geometry</exec_depend>
